@@ -88,9 +88,15 @@ person_for_prediction = df[df["age"] == search_age].iloc[0] if not df[df["age"] 
 st.subheader("📊 Summary Metrics")
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Total Records", len(filtered_df))
-col2.metric("Mean Age", f"{filtered_df['age'].mean():.2f}")
-col3.metric("Heart Disease Cases (Filtered)", int(filtered_df['target'].sum()))
+# Check if filtered_df is empty before calculating metrics
+if not filtered_df.empty:
+    col1.metric("Total Records", len(filtered_df))
+    col2.metric("Mean Age", f"{filtered_df['age'].mean():.2f}")
+    col3.metric("Heart Disease Cases (Filtered)", int(filtered_df['target'].sum()))
+else:
+    col1.metric("Total Records", 0)
+    col2.metric("Mean Age", "N/A")
+    col3.metric("Heart Disease Cases (Filtered)", 0)
 
 # =========================
 # PREDICTIVE / ANALYTICAL OUTPUT: Simple Rule-Based Risk Model
@@ -136,7 +142,10 @@ else:
 # DATA PREVIEW
 # =========================
 st.subheader("📁 Filtered Data Preview")
-st.dataframe(filtered_df.head())
+if not filtered_df.empty:
+    st.dataframe(filtered_df.head())
+else:
+    st.info("No data available for the selected filters.")
 
 # =========================
 # VISUALIZATIONS
