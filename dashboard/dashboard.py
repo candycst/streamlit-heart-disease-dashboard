@@ -141,72 +141,78 @@ st.dataframe(filtered_df.head())
 # =========================
 # VISUALIZATIONS
 # =========================
-col1, col2 = st.columns(2)
+if filtered_df.empty:
+    st.warning("No data available for the selected filters to display visualizations.")
+else:
+    col1, col2 = st.columns(2)
 
-with col1:
-    st.subheader("Age Distribution")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.histplot(filtered_df["age"], kde=True, ax=ax, color='skyblue')
-    ax.set_title('Age Distribution (Filtered)')
-    ax.set_xlabel('Age')
-    ax.set_ylabel('Count')
-    st.pyplot(fig)
+    with col1:
+        st.subheader("Age Distribution")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.histplot(filtered_df["age"], kde=True, ax=ax, color='skyblue')
+        ax.set_title('Age Distribution (Filtered)')
+        ax.set_xlabel('Age')
+        ax.set_ylabel('Count')
+        st.pyplot(fig)
 
-    st.subheader("Gender Distribution")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.countplot(x="sex", data=filtered_df, palette='viridis', ax=ax)
-    ax.set_title('Gender Distribution (Filtered)')
-    ax.set_xlabel('Sex (0 = Female, 1 = Male)')
-    ax.set_ylabel('Count')
-    st.pyplot(fig)
+        st.subheader("Gender Distribution")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.countplot(x="sex", data=filtered_df, palette='viridis', ax=ax)
+        ax.set_title('Gender Distribution (Filtered)')
+        ax.set_xlabel('Sex (0 = Female, 1 = Male)')
+        ax.set_ylabel('Count')
+        st.pyplot(fig)
 
-    st.subheader("Distribution of Cholesterol")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.histplot(filtered_df["chol"], kde=True, ax=ax, color='lightcoral')
-    ax.set_title('Cholesterol Distribution (Filtered)')
-    ax.set_xlabel('Cholesterol (mg/dl)')
-    ax.set_ylabel('Count')
-    st.pyplot(fig)
+        st.subheader("Distribution of Cholesterol")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.histplot(filtered_df["chol"], kde=True, ax=ax, color='lightcoral')
+        ax.set_title('Cholesterol Distribution (Filtered)')
+        ax.set_xlabel('Cholesterol (mg/dl)')
+        ax.set_ylabel('Count')
+        st.pyplot(fig)
 
-with col2:
-    st.subheader("Chest Pain Type")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.countplot(x="cp", data=filtered_df, palette='coolwarm', ax=ax)
-    ax.set_title('Distribution of Chest Pain Type (Filtered)')
-    ax.set_xlabel('Chest Pain Type')
-    ax.set_ylabel('Count')
-    st.pyplot(fig)
+    with col2:
+        st.subheader("Chest Pain Type")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.countplot(x="cp", data=filtered_df, palette='coolwarm', ax=ax)
+        ax.set_title('Distribution of Chest Pain Type (Filtered)')
+        ax.set_xlabel('Chest Pain Type')
+        ax.set_ylabel('Count')
+        st.pyplot(fig)
 
-    st.subheader("Age vs Max Heart Rate")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.scatterplot(
-        x="age",
-        y="thalach",
-        hue="target",
-        data=filtered_df,
-        ax=ax,
-        palette='coolwarm'
-    )
-    ax.set_title('Age vs. Maximum Heart Rate Achieved (Filtered)')
-    ax.set_xlabel('Age')
-    ax.set_ylabel('Maximum Heart Rate (thalach)')
-    st.pyplot(fig)
+        st.subheader("Age vs Max Heart Rate")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.scatterplot(
+            x="age",
+            y="thalach",
+            hue="target",
+            data=filtered_df,
+            ax=ax,
+            palette='coolwarm'
+        )
+        ax.set_title('Age vs. Maximum Heart Rate Achieved (Filtered)')
+        ax.set_xlabel('Age')
+        ax.set_ylabel('Maximum Heart Rate (thalach)')
+        st.pyplot(fig)
 
-    st.subheader("Distribution of Resting Blood Pressure")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.histplot(filtered_df["trestbps"], kde=True, ax=ax, color='mediumseagreen')
-    ax.set_title('Resting Blood Pressure Distribution (Filtered)')
-    ax.set_xlabel('Resting Blood Pressure (trestbps)')
-    ax.set_ylabel('Count')
-    st.pyplot(fig)
+        st.subheader("Distribution of Resting Blood Pressure")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.histplot(filtered_df["trestbps"], kde=True, ax=ax, color='mediumseagreen')
+        ax.set_title('Resting Blood Pressure Distribution (Filtered)')
+        ax.set_xlabel('Resting Blood Pressure (trestbps)')
+        ax.set_ylabel('Count')
+        st.pyplot(fig)
 
 # =========================
 # HEATMAP
 # =========================
-st.subheader("Correlation Heatmap")
-fig, ax = plt.subplots(figsize=(10, 6))
-# Select only numerical columns for correlation from the filtered data
-numerical_filtered_df = filtered_df.select_dtypes(include=np.number)
-sns.heatmap(numerical_filtered_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=.5, ax=ax)
-ax.set_title('Correlation Matrix of Numerical Features (Filtered)')
-st.pyplot(fig)
+if filtered_df.empty:
+    st.warning("No data available for the selected filters to display the Correlation Heatmap.")
+else:
+    st.subheader("Correlation Heatmap")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    # Select only numerical columns for correlation from the filtered data
+    numerical_filtered_df = filtered_df.select_dtypes(include=np.number)
+    sns.heatmap(numerical_filtered_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=.5, ax=ax)
+    ax.set_title('Correlation Matrix of Numerical Features (Filtered)')
+    st.pyplot(fig)
