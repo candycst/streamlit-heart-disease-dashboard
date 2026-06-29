@@ -81,6 +81,47 @@ filtered_df = filtered_df[
 # Filter for the search_age to use in the predictive model
 person_for_prediction = df[df["age"] == search_age].iloc[0] if not df[df["age"] == search_age].empty else None
 
+# =========================
+# MODEL PERFORMANCE MONITORING
+# =========================
+
+st.header("📉 Model Performance Degradation")
+
+baseline_accuracy = 0.85
+
+def predict_row(row):
+    score = calculate_risk_score(row)
+    return 1 if score >= 3 else 0
+
+if not filtered_df.empty:
+
+    # Apply prediction safely row by row
+    predicted = filtered_df.apply(predict_row, axis=1)
+
+    actual = filtered_df["target"]
+
+    # Ensure alignment
+    predicted = predicted.reset_index(drop=True)
+    actual = actual.reset_index(drop=True)
+
+    accuracy = (predicted == actual).mean()
+    performance_drop = baseline_accuracy - accuracy
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Baseline Accuracy", f"{baseline_accuracy:.2f}")
+    col2.metric("Current Accuracy", f"{accuracy:.2f}")
+    col3.metric("Performance Drop", f"{performance_drop:.2f}")
+
+    if performance_drop > 0.1:
+        st.error("⚠️ Significant model performance degradation detected")
+    elif performance_drop > 0.05:
+        st.warning("⚠️ Moderate performance degradation detected")
+    else:
+        st.success("✅ Model performance is stable")
+
+else:
+    st.warning("No data available for performance analysis")
 
 # =========================
 # DATA QUALITY MONITORING
