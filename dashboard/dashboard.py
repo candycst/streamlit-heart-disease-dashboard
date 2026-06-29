@@ -36,6 +36,18 @@ df = load_data()
 # =========================
 st.sidebar.header("🔎 Filters")
 
+st.subheader("📊 Data Quality Monitoring")
+
+missing_values = df.isnull().sum().sum()
+missing_rate = (missing_values / df.size) * 100
+duplicate_rows = df.duplicated().sum()
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Missing Values", missing_values)
+col2.metric("Missing Data Rate", f"{missing_rate:.2f}%")
+col3.metric("Duplicate Records", duplicate_rows)
+
 # INTERACTIVE FEATURE 1: Dropdown for Sex
 sex_filter = st.sidebar.selectbox(
     "Select Sex",
@@ -55,6 +67,16 @@ age_range = st.sidebar.slider(
     int(df["age"].max()),
     (int(df["age"].min()), int(df["age"].max())) # Default to full range
 )
+
+st.subheader("❤️ Business Monitoring")
+
+disease_cases = filtered_df["target"].sum()
+disease_rate = (disease_cases / len(filtered_df))*100
+
+col1, col2 = st.columns(2)
+
+col1.metric("Heart Disease Cases", int(disease_cases))
+col2.metric("Disease Rate", f"{disease_rate:.1f}%")
 
 # Additional filter for predictive model: Search Box for Exact Age
 search_age = st.sidebar.number_input(
