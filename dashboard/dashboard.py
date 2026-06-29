@@ -108,6 +108,39 @@ col1.metric("Heart Disease Cases", int(disease_cases))
 col2.metric("Disease Rate", f"{disease_rate:.1f}%")
 
 # =========================
+# DATA DRIFT ANALYSIS
+# =========================
+
+st.header("📉 Data Drift Analysis")
+
+# Baseline vs Current comparison (Age as example feature)
+baseline_mean_age = df["age"].mean()
+current_mean_age = filtered_df["age"].mean()
+
+age_drift = abs(current_mean_age - baseline_mean_age)
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Baseline Mean Age", f"{baseline_mean_age:.2f}")
+col2.metric("Current Mean Age", f"{current_mean_age:.2f}")
+col3.metric("Age Drift", f"{age_drift:.2f}")
+
+# Simple drift interpretation
+if age_drift > 5:
+    st.error("⚠️ Significant data drift detected in Age distribution")
+elif age_drift > 2:
+    st.warning("⚠️ Moderate data drift detected")
+else:
+    st.success("✅ No significant data drift detected")
+
+
+features = ["age", "chol", "trestbps"]
+
+for f in features:
+    st.write(f"Drift in {f}: {abs(filtered_df[f].mean() - df[f].mean()):.2f}")
+
+
+# =========================
 # SUMMARY METRICS
 # =========================
 st.subheader("📊 Summary Metrics")
@@ -247,34 +280,4 @@ else:
     st.pyplot(fig)
 
 
-# =========================
-# DATA DRIFT ANALYSIS
-# =========================
 
-st.header("📉 Data Drift Analysis")
-
-# Baseline vs Current comparison (Age as example feature)
-baseline_mean_age = df["age"].mean()
-current_mean_age = filtered_df["age"].mean()
-
-age_drift = abs(current_mean_age - baseline_mean_age)
-
-col1, col2, col3 = st.columns(3)
-
-col1.metric("Baseline Mean Age", f"{baseline_mean_age:.2f}")
-col2.metric("Current Mean Age", f"{current_mean_age:.2f}")
-col3.metric("Age Drift", f"{age_drift:.2f}")
-
-# Simple drift interpretation
-if age_drift > 5:
-    st.error("⚠️ Significant data drift detected in Age distribution")
-elif age_drift > 2:
-    st.warning("⚠️ Moderate data drift detected")
-else:
-    st.success("✅ No significant data drift detected")
-
-
-features = ["age", "chol", "trestbps"]
-
-for f in features:
-    st.write(f"Drift in {f}: {abs(filtered_df[f].mean() - df[f].mean()):.2f}")
