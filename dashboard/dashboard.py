@@ -181,13 +181,46 @@ feature = st.selectbox("Select feature to compare drift", drift_features)
 
 fig, ax = plt.subplots(figsize=(10, 5))
 
-sns.kdeplot(df[feature], label="Baseline", ax=ax)
-sns.kdeplot(filtered_df[feature], label="Current (Filtered)", ax=ax)
+# Drop NaN safely
+baseline_data = df[feature].dropna()
+current_data = filtered_df[feature].dropna()
+
+# Force clearer visibility using linewidth + alpha
+sns.kdeplot(
+    baseline_data,
+    label="Baseline",
+    ax=ax,
+    linewidth=3,
+    color="blue",
+    alpha=0.7
+)
+
+sns.kdeplot(
+    current_data,
+    label="Current (Filtered)",
+    ax=ax,
+    linewidth=3,
+    color="red",
+    alpha=0.7
+)
 
 ax.set_title(f"Distribution Drift: {feature}")
 ax.legend()
+ax.grid(True)
 
 st.pyplot(fig)
+
+if len(current_data) < 10:
+    st.warning("Filtered dataset is small — showing histogram instead of KDE")
+
+    fig, ax = plt.subplots()
+
+    ax.hist(baseline_data, bins=20, alpha=0.5, label="Baseline", color="blue")
+    ax.hist(current_data, bins=20, alpha=0.5, label="Current", color="red")
+
+    ax.legend()
+    st.pyplot(fig)
+
 # =========================
 # DATA QUALITY MONITORING
 # =========================
