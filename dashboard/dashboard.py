@@ -80,33 +80,6 @@ filtered_df = filtered_df[
 
 # Filter for the search_age to use in the predictive model
 person_for_prediction = df[df["age"] == search_age].iloc[0] if not df[df["age"] == search_age].empty else None
-
-# =========================
-# DATA QUALITY MONITORING
-# =========================
-st.subheader("📊 Data Quality Monitoring")
-
-missing_values = df.isnull().sum().sum()
-missing_rate = (missing_values / df.size) * 100
-duplicate_rows = df.duplicated().sum()
-
-col1, col2, col3 = st.columns(3)
-col1.metric("Missing Values", missing_values)
-col2.metric("Missing Data Rate", f"{missing_rate:.2f}%")
-col3.metric("Duplicate Records", duplicate_rows)
-
-# =========================
-# BUSINESS MONITORING  ← now safe to use filtered_df
-# =========================
-st.subheader("❤️ Business Monitoring")
-
-disease_cases = filtered_df["target"].sum()
-disease_rate = (disease_cases / len(filtered_df)) * 100 if len(filtered_df) > 0 else 0
-
-col1, col2 = st.columns(2)
-col1.metric("Heart Disease Cases", int(disease_cases))
-col2.metric("Disease Rate", f"{disease_rate:.1f}%")
-
 # =========================
 # MODEL PERFORMANCE MONITORING
 # =========================
@@ -138,6 +111,35 @@ if not filtered_df.empty:
 
 else:
     st.warning("No data available for performance analysis")
+
+
+# =========================
+# DATA QUALITY MONITORING
+# =========================
+st.subheader("📊 Data Quality Monitoring")
+
+missing_values = df.isnull().sum().sum()
+missing_rate = (missing_values / df.size) * 100
+duplicate_rows = df.duplicated().sum()
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Missing Values", missing_values)
+col2.metric("Missing Data Rate", f"{missing_rate:.2f}%")
+col3.metric("Duplicate Records", duplicate_rows)
+
+# =========================
+# BUSINESS MONITORING  ← now safe to use filtered_df
+# =========================
+st.subheader("❤️ Business Monitoring")
+
+disease_cases = filtered_df["target"].sum()
+disease_rate = (disease_cases / len(filtered_df)) * 100 if len(filtered_df) > 0 else 0
+
+col1, col2 = st.columns(2)
+col1.metric("Heart Disease Cases", int(disease_cases))
+col2.metric("Disease Rate", f"{disease_rate:.1f}%")
+
+
 # =========================
 # DATA DRIFT ANALYSIS
 # =========================
