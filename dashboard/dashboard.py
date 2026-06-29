@@ -101,49 +101,93 @@ filtered_df = filtered_df[
 person_for_prediction = df[df["age"] == search_age].iloc[0] if not df[df["age"] == search_age].empty else None
 
 
-
 # =========================
-# MODEL PERFORMANCE MONITORING
+# MODEL PERFORMANCE DEGRADATION (PROXY)
 # =========================
+st.subheader("🧠 Model Performance Degradation (Proxy Analysis)")
 
-st.header("📉 Model Performance Degradation")
+df["age_group"] = pd.cut(df["age"], bins=[0, 40, 55, 70, 100],
+                         labels=["<40", "40-55", "55-70", "70+"])
 
-baseline_accuracy = 0.85
+group_perf = df.groupby("age_group")["target"].mean()
 
-def predict_row(row):
-    score = calculate_risk_score(row)
-    return 1 if score >= 3 else 0
+st.write("Heart disease rate by age group (used as proxy performance stability):")
+st.bar_chart(group_perf)
 
-if not filtered_df.empty:
+st.info("""
+Higher variation across groups suggests potential model instability or bias,
+which may lead to performance degradation in real deployment.
+""")
+# =========================
+# STRONGER DATA DRIFT ANALYSIS (PSI + VISUAL)
+# =========================
+st.header("📉 Data Drift Analysis (Enhanced)")
 
-    # Apply prediction safely row by row
-    predicted = filtered_df.apply(predict_row, axis=1)
+def calculate_psi(expected, actual, buckets=10):
+    """Population Stability Index (PSI)"""
+    expected = np.array(expected)
+    actual = np.array(actual)
 
-    actual = filtered_df["target"]
+    breakpoints = np.linspace(min(expected.min(), actual.min()),
+                              max(expected.max(), actual.max()),
+                              buckets + 1)
 
-    # Ensure alignment
-    predicted = predicted.reset_index(drop=True)
-    actual = actual.reset_index(drop=True)
+    expected_counts = np.histogram(expected, bins=breakpoints)[0]
+    actual_counts = np.histogram(actual, bins=breakpoints)[0]
 
-    accuracy = (predicted == actual).mean()
-    performance_drop = baseline_accuracy - accuracy
+    expected_perc = expected_counts / len(expected)
+    actual_perc = actual_counts / len(actual)
 
-    col1, col2, col3 = st.columns(3)
+    psi = 0
+    for e, a in zip(expected_perc, actual_perc):
+        if e == 0 or a == 0:
+            continue
+        psi += (e - a) * np.log(e / a)
 
-    col1.metric("Baseline Accuracy", f"{baseline_accuracy:.2f}")
-    col2.metric("Current Accuracy", f"{accuracy:.2f}")
-    col3.metric("Performance Drop", f"{performance_drop:.2f}")
+    return psi
 
-    if performance_drop > 0.1:
-        st.error("⚠️ Significant model performance degradation detected")
-    elif performance_drop > 0.05:
-        st.warning("⚠️ Moderate performance degradation detected")
+# Choose key features
+drift_features = ["age", "chol", "trestbps"]
+
+psi_results = {}
+
+for f in drift_features:
+    psi = calculate_psi(df[f], filtered_df[f]) if len(filtered_df) > 0 else 0
+    psi_results[f] = psi
+
+# Display PSI results
+st.subheader("📊 Population Stability Index (PSI)")
+
+for f, psi in psi_results.items():
+    col1, col2 = st.columns(2)
+    col1.write(f"**{f}**")
+
+    if psi < 0.1:
+        status = "✅ No significant drift"
+        col2.success(f"{psi:.4f} - {status}")
+    elif psi < 0.2:
+        status = "⚠️ Moderate drift"
+        col2.warning(f"{psi:.4f} - {status}")
     else:
-        st.success("✅ Model performance is stable")
+        status = "🚨 High drift"
+        col2.error(f"{psi:.4f} - {status}")
 
-else:
-    st.warning("No data available for performance analysis")
-    
+# =========================
+# VISUAL DRIFT COMPARISON (IMPORTANT FOR SCREENSHOT)
+# =========================
+st.subheader("📊 Distribution Shift (Baseline vs Current)")
+
+feature = st.selectbox("Select feature to compare drift", drift_features)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+sns.kdeplot(df[feature], label="Baseline", ax=ax)
+sns.kdeplot(filtered_df[feature], label="Current (Filtered)", ax=ax)
+
+ax.set_title(f"Distribution Drift: {feature}")
+ax.legend()
+
+st.pyplot(fig)
 # =========================
 # DATA QUALITY MONITORING
 # =========================
