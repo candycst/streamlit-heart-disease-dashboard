@@ -14,7 +14,6 @@ st.title("❤️ Heart Disease Prediction Dashboard")
 def load_data():
     df = pd.read_csv("data/heart_disease_uci.csv")
 
-    # Convert categorical columns to appropriate types for better plotting
     df['sex'] = df['sex'].astype('category')
     df['cp'] = df['cp'].astype('category')
     df['fbs'] = df['fbs'].astype('category')
@@ -24,7 +23,6 @@ def load_data():
     df['ca'] = df['ca'].astype('category')
     df['thal'] = df['thal'].astype('category')
 
-    # Convert 'num' to a binary target variable
     df['target'] = df['num'].apply(lambda x: 1 if x > 0 else 0)
 
     return df
@@ -35,18 +33,6 @@ df = load_data()
 # SIDEBAR FILTERS
 # =========================
 st.sidebar.header("🔎 Filters")
-
-st.subheader("📊 Data Quality Monitoring")
-
-missing_values = df.isnull().sum().sum()
-missing_rate = (missing_values / df.size) * 100
-duplicate_rows = df.duplicated().sum()
-
-col1, col2, col3 = st.columns(3)
-
-col1.metric("Missing Values", missing_values)
-col2.metric("Missing Data Rate", f"{missing_rate:.2f}%")
-col3.metric("Duplicate Records", duplicate_rows)
 
 # INTERACTIVE FEATURE 1: Dropdown for Sex
 sex_filter = st.sidebar.selectbox(
@@ -65,18 +51,8 @@ age_range = st.sidebar.slider(
     "Age Range",
     int(df["age"].min()),
     int(df["age"].max()),
-    (int(df["age"].min()), int(df["age"].max())) # Default to full range
+    (int(df["age"].min()), int(df["age"].max()))
 )
-
-st.subheader("❤️ Business Monitoring")
-
-disease_cases = filtered_df["target"].sum()
-disease_rate = (disease_cases / len(filtered_df))*100
-
-col1, col2 = st.columns(2)
-
-col1.metric("Heart Disease Cases", int(disease_cases))
-col2.metric("Disease Rate", f"{disease_rate:.1f}%")
 
 # Additional filter for predictive model: Search Box for Exact Age
 search_age = st.sidebar.number_input(
@@ -86,7 +62,9 @@ search_age = st.sidebar.number_input(
     value=int(df["age"].mean())
 )
 
-# APPLY FILTERS
+# =========================
+# APPLY FILTERS  ← moved up before any use of filtered_df
+# =========================
 filtered_df = df.copy()
 
 if sex_filter != "All":
@@ -103,14 +81,38 @@ filtered_df = filtered_df[
 # Filter for the search_age to use in the predictive model
 person_for_prediction = df[df["age"] == search_age].iloc[0] if not df[df["age"] == search_age].empty else None
 
+# =========================
+# DATA QUALITY MONITORING
+# =========================
+st.subheader("📊 Data Quality Monitoring")
+
+missing_values = df.isnull().sum().sum()
+missing_rate = (missing_values / df.size) * 100
+duplicate_rows = df.duplicated().sum()
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Missing Values", missing_values)
+col2.metric("Missing Data Rate", f"{missing_rate:.2f}%")
+col3.metric("Duplicate Records", duplicate_rows)
 
 # =========================
-# METRICS
+# BUSINESS MONITORING  ← now safe to use filtered_df
+# =========================
+st.subheader("❤️ Business Monitoring")
+
+disease_cases = filtered_df["target"].sum()
+disease_rate = (disease_cases / len(filtered_df)) * 100 if len(filtered_df) > 0 else 0
+
+col1, col2 = st.columns(2)
+col1.metric("Heart Disease Cases", int(disease_cases))
+col2.metric("Disease Rate", f"{disease_rate:.1f}%")
+
+# =========================
+# SUMMARY METRICS
 # =========================
 st.subheader("📊 Summary Metrics")
 col1, col2, col3 = st.columns(3)
 
-# Check if filtered_df is empty before calculating metrics
 if not filtered_df.empty:
     col1.metric("Total Records", len(filtered_df))
     col2.metric("Mean Age", f"{filtered_df['age'].mean():.2f}")
@@ -121,27 +123,25 @@ else:
     col3.metric("Heart Disease Cases (Filtered)", 0)
 
 # =========================
-# PREDICTIVE / ANALYTICAL OUTPUT: Simple Rule-Based Risk Model
+# PREDICTIVE / ANALYTICAL OUTPUT
 # =========================
 st.subheader("🧠 Heart Disease Risk Prediction")
 
 def calculate_risk_score(data_row):
     score = 0
-    # Use .get() to safely access values, providing a default if the column is missing
-    age = data_row.get("age", 0) # Default 0 won't trigger age > 55
-    chol = data_row.get("chol", 0) # Default 0 won't trigger chol > 240
-    trestbps = data_row.get("trestbps", 0) # Default 0 won't trigger trestbps > 140
-    thalach = data_row.get("thalach", 999) # Default 999 won't trigger thalach < 120
-    exang = data_row.get("exang", 0) # Default 0 won't trigger exang == 1
-    cp = data_row.get("cp", -1) # Default -1 won't trigger cp in [1, 2, 3]
+    age = data_row.get("age", 0)
+    chol = data_row.get("chol", 0)
+    trestbps = data_row.get("trestbps", 0)
+    thalach = data_row.get("thalach", 999)
+    exang = data_row.get("exang", 0)
+    cp = data_row.get("cp", -1)
 
-    # Example rules (these are illustrative and not clinically validated)
     if age > 55: score += 1
     if chol > 240: score += 1
     if trestbps > 140: score += 1
     if thalach < 120: score += 1
     if exang == 1: score += 1
-    if cp in [1, 2, 3]: score += 1 # Atypical angina, non-anginal pain, asymptomatic
+    if cp in [1, 2, 3]: score += 1
     return score
 
 if person_for_prediction is not None:
@@ -155,8 +155,7 @@ if person_for_prediction is not None:
     else:
         st.error(f"High Risk (Score: {risk_score_value})")
 
-    st.write("*(Note: This is a simplified, rule-based model for demonstration purposes only and should not be used for actual medical diagnosis.)*"
-)
+    st.write("*(Note: This is a simplified, rule-based model for demonstration purposes only and should not be used for actual medical diagnosis.)*")
 else:
     st.info(f"No data available for age {int(search_age)} to perform prediction.")
 
@@ -242,7 +241,6 @@ if filtered_df.empty:
 else:
     st.subheader("Correlation Heatmap")
     fig, ax = plt.subplots(figsize=(10, 6))
-    # Select only numerical columns for correlation from the filtered data
     numerical_filtered_df = filtered_df.select_dtypes(include=np.number)
     sns.heatmap(numerical_filtered_df.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=.5, ax=ax)
     ax.set_title('Correlation Matrix of Numerical Features (Filtered)')
