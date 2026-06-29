@@ -108,6 +108,53 @@ col1.metric("Heart Disease Cases", int(disease_cases))
 col2.metric("Disease Rate", f"{disease_rate:.1f}%")
 
 # =========================
+# Model Performance Degradation (Simulated ML Monitoring)
+# =========================
+baseline_accuracy = 0.85
+if not filtered_df.empty:
+    predictions = filtered_df.apply(calculate_risk_score, axis=1)
+
+    # Convert risk score into binary prediction
+    predicted = predictions.apply(lambda x: 1 if x >= 3 else 0)
+
+    accuracy = (predicted == filtered_df["target"]).mean()
+else:
+    accuracy = 0
+
+performance_drop = baseline_accuracy - accuracy
+
+# =========================
+# MODEL PERFORMANCE MONITORING
+# =========================
+
+st.header("📉 Model Performance Degradation")
+
+baseline_accuracy = 0.85
+
+if not filtered_df.empty:
+
+    predictions = filtered_df.apply(calculate_risk_score, axis=1)
+    predicted = predictions.apply(lambda x: 1 if x >= 3 else 0)
+
+    accuracy = (predicted == filtered_df["target"]).mean()
+    performance_drop = baseline_accuracy - accuracy
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Baseline Accuracy", f"{baseline_accuracy:.2f}")
+    col2.metric("Current Accuracy", f"{accuracy:.2f}")
+    col3.metric("Performance Drop", f"{performance_drop:.2f}")
+
+    if performance_drop > 0.1:
+        st.error("⚠️ Significant model performance degradation detected")
+    elif performance_drop > 0.05:
+        st.warning("⚠️ Moderate performance drop detected")
+    else:
+        st.success("✅ Model performance is stable")
+
+else:
+    st.warning("No data available for performance analysis")
+# =========================
 # DATA DRIFT ANALYSIS
 # =========================
 
