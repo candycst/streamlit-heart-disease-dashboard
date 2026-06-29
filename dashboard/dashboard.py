@@ -108,22 +108,6 @@ col1.metric("Heart Disease Cases", int(disease_cases))
 col2.metric("Disease Rate", f"{disease_rate:.1f}%")
 
 # =========================
-# Model Performance Degradation (Simulated ML Monitoring)
-# =========================
-baseline_accuracy = 0.85
-if not filtered_df.empty:
-    predictions = filtered_df.apply(calculate_risk_score, axis=1)
-
-    # Convert risk score into binary prediction
-    predicted = predictions.apply(lambda x: 1 if x >= 3 else 0)
-
-    accuracy = (predicted == filtered_df["target"]).mean()
-else:
-    accuracy = 0
-
-performance_drop = baseline_accuracy - accuracy
-
-# =========================
 # MODEL PERFORMANCE MONITORING
 # =========================
 
